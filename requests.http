@@ -1,0 +1,6 @@
+### Buscar CEP válido
+GET http://localhost:8080/cep/08556450
+Content-Type: application/json
+
+### Buscar CEP inválido
+GET http://localhost:8080/cep/1234567890
