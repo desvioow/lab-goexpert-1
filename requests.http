@@ -1,10 +1,14 @@
 ### Buscar CEP válido
-GET http://localhost:8080/cep/08556450
+GET http://localhost:8080/temperature/69402289
 Content-Type: application/json
 
 ### Buscar CEP inválido
-GET http://localhost:8080/cep/1234567890
+GET http://localhost:8080/temperature/1234567890
 
 ### Buscar CEP  válido mas inexistente
-GET http://localhost:8080/cep/08556111
+GET http://localhost:8080/temperature/08556111
+Content-Type: application/json
+
+### Buscar CEP válido mas cidade(Poá) não considerada válida na API da weatherapi.com
+GET http://localhost:8080/temperature/08556450
 Content-Type: application/json

@@ -11,12 +11,12 @@ import (
 
 func main() {
 	r := chi.NewRouter()
-	r.Get("/cep/{cep}", cepHandler)
+	r.Get("/temperature/{cep}", cepHandler)
 
 	http.ListenAndServe(":8080", r)
 }
 
-type CepResponse struct {
+type TemperatureResponse struct {
 	TempC string `json:"temp_C"`
 	TempF string `json:"temp_F"`
 	TempK string `json:"temp_K"`
@@ -95,20 +95,36 @@ func cepHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("invalid zipcode"))
 		return
 	}
-	viaCepResponse, err := fetchCep(cep)
 
+	viaCepResponse, err := fetchCep(cep)
 	if err != nil {
 		fmt.Println("Error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	if isViaCepResponseEmpty(viaCepResponse) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("can not find zipcode"))
 		return
 	}
 
+	weatherApiResponse, err := fetchWeather(viaCepResponse.Localidade)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("can not find weather for the city"))
+		return
+	}
+	if isWeatherApiResponseEmpty(weatherApiResponse) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("can not find city"))
+		return
+	}
+
+	temperature, err := getTemperatureFromWeatherApiResponse(weatherApiResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	json.NewEncoder(w).Encode(temperature)
 	w.WriteHeader(http.StatusOK)
 	return
 
@@ -170,4 +186,22 @@ func fetchWeather(cityName string) (WeatherApiResponse, error) {
 	}
 
 	return weatherApiResponse, nil
+}
+
+func isWeatherApiResponseEmpty(response WeatherApiResponse) bool {
+	empty := WeatherApiResponse{}
+	return response == empty
+}
+
+func getTemperatureFromWeatherApiResponse(weatherApiResponse WeatherApiResponse) (TemperatureResponse, error) {
+
+	tempC := weatherApiResponse.Current.TempC
+	tempF := (tempC * 1.8) + 32
+	tempK := tempC + 273
+
+	return TemperatureResponse{
+		TempC: fmt.Sprintf("%.1f", tempC),
+		TempF: fmt.Sprintf("%.1f", tempF),
+		TempK: fmt.Sprintf("%.1f", tempK),
+	}, nil
 }
