@@ -54,8 +54,11 @@ func cepHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Quick terminal print options:
-	fmt.Printf("%+v\n", viaCepResponse)
+	if isViaCepResponseEmpty(viaCepResponse) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("can not find zipcode"))
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	return
@@ -80,4 +83,9 @@ func fetchCep(cep string) (ViaCepResponse, error) {
 	}
 
 	return viaCepResponse, nil
+}
+
+func isViaCepResponseEmpty(response ViaCepResponse) bool {
+	empty := ViaCepResponse{}
+	return response == empty
 }
