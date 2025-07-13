@@ -38,6 +38,54 @@ type ViaCepResponse struct {
 	Siafi       string `json:"siafi"`
 }
 
+type WeatherApiResponse struct {
+	Location struct {
+		Name           string  `json:"name"`
+		Region         string  `json:"region"`
+		Country        string  `json:"country"`
+		Lat            float64 `json:"lat"`
+		Lon            float64 `json:"lon"`
+		TzID           string  `json:"tz_id"`
+		LocaltimeEpoch int     `json:"localtime_epoch"`
+		Localtime      string  `json:"localtime"`
+	} `json:"location"`
+	Current struct {
+		LastUpdatedEpoch int     `json:"last_updated_epoch"`
+		LastUpdated      string  `json:"last_updated"`
+		TempC            float64 `json:"temp_c"`
+		TempF            float64 `json:"temp_f"`
+		IsDay            int     `json:"is_day"`
+		Condition        struct {
+			Text string `json:"text"`
+			Icon string `json:"icon"`
+			Code int    `json:"code"`
+		} `json:"condition"`
+		WindMph    float64 `json:"wind_mph"`
+		WindKph    float64 `json:"wind_kph"`
+		WindDegree int     `json:"wind_degree"`
+		WindDir    string  `json:"wind_dir"`
+		PressureMb float64 `json:"pressure_mb"`
+		PressureIn float64 `json:"pressure_in"`
+		PrecipMm   float64 `json:"precip_mm"`
+		PrecipIn   float64 `json:"precip_in"`
+		Humidity   int     `json:"humidity"`
+		Cloud      int     `json:"cloud"`
+		FeelslikeC float64 `json:"feelslike_c"`
+		FeelslikeF float64 `json:"feelslike_f"`
+		WindchillC float64 `json:"windchill_c"`
+		WindchillF float64 `json:"windchill_f"`
+		HeatindexC float64 `json:"heatindex_c"`
+		HeatindexF float64 `json:"heatindex_f"`
+		DewpointC  float64 `json:"dewpoint_c"`
+		DewpointF  float64 `json:"dewpoint_f"`
+		VisKm      float64 `json:"vis_km"`
+		VisMiles   float64 `json:"vis_miles"`
+		Uv         float64 `json:"uv"`
+		GustMph    float64 `json:"gust_mph"`
+		GustKph    float64 `json:"gust_kph"`
+	} `json:"current"`
+}
+
 func cepHandler(w http.ResponseWriter, r *http.Request) {
 	cep := chi.URLParam(r, "cep")
 	regex := regexp.MustCompile(`^\d{8}$`)
@@ -48,6 +96,7 @@ func cepHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	viaCepResponse, err := fetchCep(cep)
+
 	if err != nil {
 		fmt.Println("Error:", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -66,7 +115,10 @@ func cepHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func fetchCep(cep string) (ViaCepResponse, error) {
-	resp, err := http.Get("https://viacep.com.br/ws/" + cep + "/json/")
+
+	url := fmt.Sprintf("https://viacep.com.br/ws/%s/json/", cep)
+
+	resp, err := http.Get(url)
 	if err != nil {
 		return ViaCepResponse{}, err
 	}
@@ -88,4 +140,34 @@ func fetchCep(cep string) (ViaCepResponse, error) {
 func isViaCepResponseEmpty(response ViaCepResponse) bool {
 	empty := ViaCepResponse{}
 	return response == empty
+}
+
+func fetchWeather(cityName string) (WeatherApiResponse, error) {
+	const weatherApiKey = "4d0046deef4e4342bd9192050251307"
+	const baseUrl = "http://api.weatherapi.com/v1"
+
+	url := fmt.Sprintf("%s/current.json?key=%s&q=%s&aqi=no",
+		baseUrl,
+		weatherApiKey,
+		cityName,
+	)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return WeatherApiResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return WeatherApiResponse{}, err
+	}
+
+	var weatherApiResponse WeatherApiResponse
+	err = json.Unmarshal(body, &weatherApiResponse)
+	if err != nil {
+		return WeatherApiResponse{}, err
+	}
+
+	return weatherApiResponse, nil
 }
