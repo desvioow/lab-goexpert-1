@@ -38,6 +38,7 @@ Retorna a temperatura atual da cidade correspondente ao CEP informado.
 }
 ```
 
+
 ## Como testar a aplicação no Google CLoud Run
 # Buscar CEP válido
 ```json
