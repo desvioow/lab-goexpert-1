@@ -38,29 +38,30 @@ Retorna a temperatura atual da cidade correspondente ao CEP informado.
 }
 ```
 
-## Como Executar Localmente
 
-### Pré-requisitos
-- Go 1.22 ou superior
-- Docker (opcional)
-
-### Executando com Go
-```bash
-# Clone o repositório
-git clone [url-do-repositorio]
-cd lab-goexpert-1
-
-# Execute a aplicação
-go run main.go
+## Como testar a aplicação no Google CLoud Run
+# Buscar CEP válido
+```json
+curl -X GET \
+  -H "Content-Type: application/json" \
+  https://lab-goexpert-1-392400719582.southamerica-east1.run.app/69402289
 ```
-
-### Executando com Docker
-```bash
-# Construa a imagem
-docker build -t lab-goexpert-1 .
-
-# Execute o container
-docker run -p 8080:8080 lab-goexpert-1
+# Buscar CEP inválido
+```json
+curl -X GET \
+  https://lab-goexpert-1-392400719582.southamerica-east1.run.app/1234567890
+```
+# Buscar CEP válido mas inexistente
+```json
+curl -X GET \
+  -H "Content-Type: application/json" \
+  https://lab-goexpert-1-392400719582.southamerica-east1.run.app/08556111
+```
+# Buscar CEP válido mas cidade(Poá) não considerada válida na API da weatherapi.com
+```json
+curl -X GET \
+  -H "Content-Type: application/json" \
+  https://lab-goexpert-1-392400719582.southamerica-east1.run.app/08556450
 ```
 
 ## Deploy
